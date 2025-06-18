@@ -16,6 +16,7 @@ import top.diff.mpag.remote.WeixinMPClient;
 import top.diff.mpag.remote.param.*;
 import top.diff.mpag.service.params.WeixinMPDraftCreateAndPost;
 import top.diff.mpag.utils.DateUtil;
+import top.diff.mpag.utils.RegexUtil;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -33,6 +34,8 @@ public class WeixinMPPostService {
   private BarkService barkService;
   @Value("${bark.weixinMP.draftPostedNotifyDevices:\"\"}")
   private String draftPostedNotifyDevices;
+  @Autowired
+  private TransferImageService transferImageService;
 
   /**
    * 创建和发布草稿
@@ -42,6 +45,8 @@ public class WeixinMPPostService {
       log.error("草稿箱创建参数不合法: {}", JSON.toJSONString(request));
       return null;
     }
+    // 生成封面图
+    generateArticleThumb(request);
     WeixinMPClient client = feignClientService.getClient(WeixinMPClient.class, CustomAppId.WeixinMP.name());
     String response = client.createDraft(request);
     WeixinMPDraftCreateResponse responseEntity = JSON.to(WeixinMPDraftCreateResponse.class, response);
@@ -79,6 +84,24 @@ public class WeixinMPPostService {
       barkService.pushMsg(device, "每日推文更新", DateUtil.toStandardYMD(new Date()));
     }
     return new WeixinMPDraftCreateAndPost(afterDraft.isPost2MpNews(), afterDraft.isSend2All(), mediaId, publishId);
+  }
+
+  /**
+   * 生成文章头图
+   */
+  private void generateArticleThumb(WeixinMPDraftCreateRequest request) {
+    List<WeixinMPDraftCreateRequest.ArticlesDTO> articles = request.getArticles();
+    for (WeixinMPDraftCreateRequest.ArticlesDTO article : articles) {
+      String content = article.getContent();
+      String imgTagUrl = RegexUtil.parseImgTag(content);
+      if (!StringUtils.hasText(imgTagUrl)) {
+        continue;
+      }
+      String mediaId = transferImageService.downloadAndUploadToWeChatMaterial(content);
+      if (StringUtils.hasText(mediaId)) {
+        article.setThumbMediaId(mediaId);
+      }
+    }
   }
 
   /**

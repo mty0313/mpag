@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import top.diff.mpag.common.CustomAppId;
 import top.diff.mpag.common.R;
+import top.diff.mpag.controller.params.N8NFeeds;
 import top.diff.mpag.controller.params.UploadImageData;
 import top.diff.mpag.controller.params.WxArticlesPost;
 import top.diff.mpag.job.params.WeixinMPAfterDraft;
@@ -60,6 +61,19 @@ public class WxArticleController {
     } else {
       return R.error();
     }
+  }
+
+  @PostMapping("/convertImage")
+  public N8NFeeds convertImage(@RequestBody N8NFeeds n8NFeeds) {
+    for (N8NFeeds.FeedJson feedJson : n8NFeeds.getFeedJsons()) {
+      String imageUrl = feedJson.getJson().getImage();
+      if (StringUtils.isBlank(imageUrl)) {
+        continue;
+      }
+      String wxmpUrl = transferImageService.downloadAndUploadToWeChat(imageUrl);
+      feedJson.getJson().setImage(wxmpUrl);
+    }
+    return n8NFeeds;
   }
 
   private WeixinMPDraftCreateRequest buildFromReq(WxArticlesPost article) {

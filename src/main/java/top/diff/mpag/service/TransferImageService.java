@@ -10,13 +10,12 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import top.diff.mpag.common.CustomAppId;
 import top.diff.mpag.remote.WeixinMPClient;
+import top.diff.mpag.remote.param.WeixinMPAddMaterialResponse;
 import top.diff.mpag.remote.param.WeixinMPImageUploadResponse;
 import top.diff.mpag.utils.FileUtil;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -30,32 +29,7 @@ public class TransferImageService {
       return null;
     }
     try {
-      // 下载图片
-      URL url = new URL(webUrl);
-      URLConnection connection = url.openConnection();
-      connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-      InputStream inputStream = connection.getInputStream();
-
-      // 读取内容
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      byte[] buffer = new byte[8192];
-      int len;
-      while ((len = inputStream.read(buffer)) != -1) {
-        baos.write(buffer, 0, len);
-      }
-      byte[] fileContent = baos.toByteArray();
-
-      // 获取 contentType 和扩展名
-      String contentType = connection.getContentType();
-      String ext = contentType != null && contentType.contains("/") ? contentType.split("/")[1] : "jpg";
-      String fileName = "image." + ext;
-
-      // 创建 MultipartFile
-      FileItem fileItem = new DiskFileItem("media", contentType, false, fileName, fileContent.length, new File(System.getProperty("java.io.tmpdir")));
-      try (OutputStream os = fileItem.getOutputStream()) {
-        os.write(fileContent);
-      }
-      MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+      MultipartFile multipartFile = createMultipartFileFromUrl(webUrl);
       WeixinMPClient client = dynamicFeignClientService.getClient(WeixinMPClient.class, CustomAppId.WeixinMP.name());
       // 上传
       String uploadRes = client.uploadImage(multipartFile);
@@ -68,4 +42,56 @@ public class TransferImageService {
       throw new RuntimeException("处理图片失败: " + e.getMessage(), e);
     }
   }
+
+  public String downloadAndUploadToWeChatMaterial(String webUrl) {
+    if (StringUtils.isBlank(webUrl)) {
+      return null;
+    }
+    try {
+      MultipartFile multipartFile = createMultipartFileFromUrl(webUrl);
+      WeixinMPClient client = dynamicFeignClientService.getClient(WeixinMPClient.class, CustomAppId.WeixinMP.name());
+      // 上传
+      String uploadRes = client.addMaterial("image", multipartFile);
+      WeixinMPAddMaterialResponse uploadResponse = JSON.to(WeixinMPAddMaterialResponse.class, uploadRes);
+      if (null != uploadResponse && uploadResponse.success()) {
+        return uploadResponse.getMediaId();
+      }
+      return null;
+    } catch (Exception e) {
+      throw new RuntimeException("处理图片失败: " + e.getMessage(), e);
+    }
+  }
+
+  private MultipartFile createMultipartFileFromUrl(String webUrl) throws IOException {
+    // 下载图片
+    URL url = new URL(webUrl);
+    URLConnection connection = url.openConnection();
+    connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+    InputStream inputStream = connection.getInputStream();
+
+    // 读取内容
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    byte[] buffer = new byte[8192];
+    int len;
+    while ((len = inputStream.read(buffer)) != -1) {
+      baos.write(buffer, 0, len);
+    }
+    byte[] fileContent = baos.toByteArray();
+
+    // 获取 contentType 和扩展名
+    String contentType = connection.getContentType();
+    String ext = contentType != null && contentType.contains("/") ? contentType.split("/")[1] : "jpg";
+    String fileName = "image." + ext;
+
+    // 创建 MultipartFile
+    FileItem fileItem = new DiskFileItem("media", contentType, false, fileName, fileContent.length, new File(System.getProperty("java.io.tmpdir")));
+    try (OutputStream os = fileItem.getOutputStream()) {
+      os.write(fileContent);
+    }
+    return new CommonsMultipartFile(fileItem);
+  }
+
+
+
+
 }
