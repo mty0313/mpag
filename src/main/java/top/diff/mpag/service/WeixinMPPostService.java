@@ -16,6 +16,7 @@ import top.diff.mpag.remote.WeixinMPClient;
 import top.diff.mpag.remote.param.*;
 import top.diff.mpag.service.params.WeixinMPDraftCreateAndPost;
 import top.diff.mpag.utils.DateUtil;
+import top.diff.mpag.utils.GuavaCache;
 import top.diff.mpag.utils.RegexUtil;
 
 import java.util.Arrays;
@@ -97,7 +98,9 @@ public class WeixinMPPostService {
       if (!StringUtils.hasText(imgTagUrl)) {
         continue;
       }
-      String mediaId = transferImageService.downloadAndUploadToWeChatMaterial(content);
+      // 从缓存获取原图,进行上传
+      String rawImageUrl = GuavaCache.get(imgTagUrl).toString();
+      String mediaId = transferImageService.downloadAndUploadToWeChatMaterial(rawImageUrl);
       if (StringUtils.hasText(mediaId)) {
         article.setThumbMediaId(mediaId);
       }

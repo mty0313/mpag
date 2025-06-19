@@ -31,7 +31,5 @@ public class N8NFeeds {
     private String contentSnippet;
     @JsonProperty("image")
     private String image;
-    @JsonProperty("rawImage")
-    private String rawImage;
   }
 }

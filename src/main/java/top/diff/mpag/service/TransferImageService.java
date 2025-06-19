@@ -12,10 +12,9 @@ import top.diff.mpag.common.CustomAppId;
 import top.diff.mpag.remote.WeixinMPClient;
 import top.diff.mpag.remote.param.WeixinMPAddMaterialResponse;
 import top.diff.mpag.remote.param.WeixinMPImageUploadResponse;
-import top.diff.mpag.utils.FileUtil;
+import top.diff.mpag.utils.GuavaCache;
 
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -28,6 +27,11 @@ public class TransferImageService {
     if (StringUtils.isBlank(webUrl)) {
       return null;
     }
+    // 先取缓存
+    String uploadWeChatUrlCache = GuavaCache.get(webUrl).toString();
+    if (StringUtils.isNotBlank(uploadWeChatUrlCache)) {
+      return uploadWeChatUrlCache;
+    }
     try {
       MultipartFile multipartFile = createMultipartFileFromUrl(webUrl);
       WeixinMPClient client = dynamicFeignClientService.getClient(WeixinMPClient.class, CustomAppId.WeixinMP.name());
@@ -35,7 +39,13 @@ public class TransferImageService {
       String uploadRes = client.uploadImage(multipartFile);
       WeixinMPImageUploadResponse uploadResponse = JSON.to(WeixinMPImageUploadResponse.class, uploadRes);
       if (null != uploadResponse && uploadResponse.success()) {
-        return uploadResponse.getUrl();
+        String uploadWeChatUrl = uploadResponse.getUrl();
+        if (StringUtils.isNotBlank(uploadWeChatUrl)) {
+          // 设置缓存, 减少重复上传
+          GuavaCache.put(webUrl, uploadWeChatUrl);
+          GuavaCache.put(uploadWeChatUrl, webUrl);
+          return uploadWeChatUrl;
+        }
       }
       return null;
     } catch (Exception e) {
