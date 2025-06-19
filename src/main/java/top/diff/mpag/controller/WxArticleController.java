@@ -72,6 +72,7 @@ public class WxArticleController {
       }
       String wxmpUrl = transferImageService.downloadAndUploadToWeChat(imageUrl);
       feedJson.getJson().setImage(wxmpUrl);
+      feedJson.getJson().setRawImage(imageUrl);
     }
     return n8NFeeds;
   }
