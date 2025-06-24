@@ -19,6 +19,14 @@ public class GuavaCache {
     return cache.getIfPresent(key);
   }
 
+  public static String getString(String key) {
+    Object cached = cache.getIfPresent(key);
+    if (null != cached) {
+      return cached.toString();
+    }
+    return null;
+  }
+
   public static void remove(String key) {
     cache.invalidate(key);
   }

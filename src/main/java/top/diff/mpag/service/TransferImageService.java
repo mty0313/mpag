@@ -1,6 +1,7 @@
 package top.diff.mpag.service;
 
 import com.alibaba.fastjson2.JSON;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.lang3.StringUtils;
@@ -19,6 +20,7 @@ import java.net.URL;
 import java.net.URLConnection;
 
 @Service
+@Slf4j
 public class TransferImageService {
   @Autowired
   private DynamicFeignClientService dynamicFeignClientService;
@@ -28,7 +30,7 @@ public class TransferImageService {
       return null;
     }
     // 先取缓存
-    String uploadWeChatUrlCache = GuavaCache.get(webUrl).toString();
+    String uploadWeChatUrlCache = GuavaCache.getString(webUrl);
     if (StringUtils.isNotBlank(uploadWeChatUrlCache)) {
       return uploadWeChatUrlCache;
     }
@@ -49,7 +51,8 @@ public class TransferImageService {
       }
       return null;
     } catch (Exception e) {
-      throw new RuntimeException("处理图片失败: " + e.getMessage(), e);
+      log.error("处理图片失败: " + e.getMessage(), e);
+      return null;
     }
   }
 

@@ -99,7 +99,7 @@ public class WeixinMPPostService {
         continue;
       }
       // 从缓存获取原图,进行上传
-      String rawImageUrl = GuavaCache.get(imgTagUrl).toString();
+      String rawImageUrl = GuavaCache.getString(imgTagUrl);
       String mediaId = transferImageService.downloadAndUploadToWeChatMaterial(rawImageUrl);
       if (StringUtils.hasText(mediaId)) {
         article.setThumbMediaId(mediaId);
