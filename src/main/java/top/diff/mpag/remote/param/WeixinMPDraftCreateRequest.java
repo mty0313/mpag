@@ -1,12 +1,12 @@
 package top.diff.mpag.remote.param;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.util.StringUtils;
-import top.diff.mpag.utils.DateUtil;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @NoArgsConstructor
@@ -45,7 +45,7 @@ public class WeixinMPDraftCreateRequest {
      * 图文消息的原文地址，即点击“阅读原文”后的URL
      */
     @JsonProperty("content_source_url")
-    private String contentSourceUrl = "https://github.com/mty0313/JellyfinMP";
+    private String contentSourceUrl = "https://github.com/mty0313/mpag";
     /**
      * 图文消息的封面图片素材id（必须是永久MediaID）
      */
