@@ -33,8 +33,6 @@ public class WeixinMPPostService {
   private WeixinMPDraftPostMapper draftPostMapper;
   @Autowired
   private BarkService barkService;
-  @Value("${bark.weixinMP.draftPostedNotifyDevices:\"\"}")
-  private String draftPostedNotifyDevices;
   @Autowired
   private TransferImageService transferImageService;
 
@@ -75,14 +73,6 @@ public class WeixinMPPostService {
       } else {
         log.error("群发任务提交失败: {}", JSON.toJSONString(send2AllResponse));
       }
-    }
-    // 推送bark通知手动处理
-    String[] draftPostedNotifyDevices = this.draftPostedNotifyDevices.split(",");
-    if (CollectionUtils.isEmpty(Arrays.asList(draftPostedNotifyDevices))) {
-      log.info("Bark推送设备列表为空忽略推送");
-    }
-    for (String device : draftPostedNotifyDevices) {
-      barkService.pushMsg(device, "每日推文更新", DateUtil.toStandardYMD(new Date()));
     }
     return new WeixinMPDraftCreateAndPost(afterDraft.isPost2MpNews(), afterDraft.isSend2All(), mediaId, publishId);
   }

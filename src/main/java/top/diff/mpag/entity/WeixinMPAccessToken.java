@@ -12,4 +12,8 @@ public class WeixinMPAccessToken {
   private String accessToken;
   @JsonProperty("expires_in")
   private Integer expiresIn;
+  @JsonProperty("errcode")
+  private Integer errcode;
+  @JsonProperty("errmsg")
+  private String errmsg;
 }

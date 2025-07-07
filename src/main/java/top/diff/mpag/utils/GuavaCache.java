@@ -27,6 +27,14 @@ public class GuavaCache {
     return null;
   }
 
+  public static Long getLong(String key) {
+    Object cached = cache.getIfPresent(key);
+    if (null != cached) {
+      return Long.parseLong(cached.toString());
+    }
+    return null;
+  }
+
   public static void remove(String key) {
     cache.invalidate(key);
   }

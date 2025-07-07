@@ -26,10 +26,4 @@ public class WeixinMPJob {
   public void tokenRefresh() {
     weixinTokenService.refreshAccessToken();
   }
-
-  @Scheduled(cron = "0 0 9 * * ?")
-  public void draftCreate() throws GlobalException {
-    WeixinMPAfterDraft afterDraft = new WeixinMPAfterDraft(post2MpNews, send2All);
-    weixinMPDraftService.createDraft(afterDraft);
-  }
 }

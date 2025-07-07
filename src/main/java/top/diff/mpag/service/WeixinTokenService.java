@@ -19,6 +19,8 @@ public class WeixinTokenService {
   private RemoteServerInfoService remoteServerInfoService;
   @Value("${init.weixinmp.serverUrl:https://api.weixin.qq.com}")
   private String initWeixinMPServerUrl;
+  @Autowired
+  private BarkService barkService;
 
   public void refreshAccessToken() {
     WeixinMPClient weixinMPClient = feignClientService.getClient(WeixinMPClient.class, CustomAppId.WeixinMP.name());
@@ -35,6 +37,10 @@ public class WeixinTokenService {
       // 否则更新记录
       remoteServerInfoService.updateAccessToken(remoteServerInfo.getUuid(), tokenResponse.getAccessToken());
       log.info("微信公众号accessToken成功刷新");
+    } else if (null != tokenResponse) {
+      String title = "MPAG: " + tokenResponse.getErrcode().toString();
+      String content = tokenResponse.getErrmsg();
+      barkService.pushMsg(title, content, false);
     }
   }
 }
